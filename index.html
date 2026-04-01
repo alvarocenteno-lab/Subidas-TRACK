@@ -246,17 +246,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <div class="pane" id="pane-datos" style="display:none">
         <div class="q-label">Paso 4</div>
         <div class="q-title">Rellena los datos del cambio</div>
-    
+      
         <!-- User Code -->
         <div id="bloque-user" class="input-block">
             <input id="userCode" placeholder="Código de usuario" oninput="checkUserCode()">
         </div>
-    
+      
         <!-- Jira Code -->
         <div id="bloque-jira" class="input-block" style="display:none">
             <input id="jiraCode" placeholder="Código Jira" oninput="checkJiraCode()">
         </div>
-    
+      
         <!-- Action Type -->
         <div id="bloque-action" class="input-block" style="display:none">
             <select id="actionType" onchange="checkActionType()">
@@ -266,17 +266,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
                 <option value="BORRAR">BORRAR</option>
             </select>
         </div>
-    
+      
         <!-- Query -->
         <div id="bloque-query" class="input-block" style="display:none">
             <textarea id="query" placeholder="Query" oninput="checkQuery()"></textarea>
         </div>
-    
+      
         <div class="btn-row">
             <button id="btn-finalizar" class="btn btn-primary" onclick="finalizarDatos()" style="display:none">Finalizar →</button>
-            <button class="btn btn-ghost" onclick="goTo(3)">← Atrás</button>
+            <button class="btn btn-ghost" onclick="goTo(2)">← Atrás</button>
         </div>
-    </div>
+      </div>
 
       <!-- CHECKLIST -->
       <div class="pane" id="pane-cl">
@@ -341,7 +341,12 @@ const S = {
   docJuri:null,
   colecciones:[],
   xpathDoc:null,
-  actionDoc:null
+  actionDoc:null,
+  userCode:null,
+  jiraCode:null,
+  actionType:null,
+  query:null,
+  
 };
 let currentPane = 0;
 
@@ -685,10 +690,76 @@ function continuarPaso3(){
     }
   }
 
-  // ✅ SI TODO OK
-  mostrarPanelDatos();
+  goTo('pane-datos');
+  document.getElementById('userCode').focus();
+}
+function checkUserCode() {
+  const val = document.getElementById('userCode').value.trim();
+  if (val) {
+    document.getElementById('bloque-jira').style.display = 'block';
+    document.getElementById('jiraCode').focus();
+  } else {
+    document.getElementById('bloque-jira').style.display = 'none';
+    document.getElementById('bloque-action').style.display = 'none';
+    document.getElementById('bloque-query').style.display = 'none';
+    document.getElementById('btn-finalizar').style.display = 'none';
+  }
 }
 
+// Jira code
+function checkJiraCode() {
+  const val = document.getElementById('jiraCode').value.trim();
+  if (val) {
+    document.getElementById('bloque-action').style.display = 'block';
+    document.getElementById('actionType').focus();
+  } else {
+    document.getElementById('bloque-action').style.display = 'none';
+    document.getElementById('bloque-query').style.display = 'none';
+    document.getElementById('btn-finalizar').style.display = 'none';
+  }
+}
+
+// Action Type
+function checkActionType() {
+  const val = document.getElementById('actionType').value;
+  if (val) {
+    document.getElementById('bloque-query').style.display = 'block';
+    document.getElementById('query').focus();
+  } else {
+    document.getElementById('bloque-query').style.display = 'none';
+    document.getElementById('btn-finalizar').style.display = 'none';
+  }
+}
+
+// Query
+function checkQuery() {
+  const val = document.getElementById('query').value.trim();
+  if (val) {
+    document.getElementById('btn-finalizar').style.display = 'inline-flex';
+  } else {
+    document.getElementById('btn-finalizar').style.display = 'none';
+  }
+}
+
+function finalizarDatos() {
+  const user = document.getElementById('userCode').value.trim();
+  const jira = document.getElementById('jiraCode').value.trim();
+  const action = document.getElementById('actionType').value;
+  const query = document.getElementById('query').value.trim();
+
+  if (!user || !jira || !action || !query) {
+    toast("Completa todos los campos antes de continuar", "err");
+    return;
+  }
+
+  S.userCode = user;
+  S.jiraCode = jira;
+  S.actionType = action;
+  S.query = query;
+
+  // Ir al checklist
+  goTo('pane-cl');
+}
 function showSection(id,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
