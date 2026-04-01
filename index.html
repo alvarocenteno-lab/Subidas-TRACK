@@ -510,30 +510,81 @@ function setDocJuri(val, el) {
   S.docJuri = val;
 
   // Marcar visualmente
-  document.querySelectorAll('#bloque-doc-juri .chip').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('#bloque-doc-juri .chip')
+    .forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
 
-  // Mostrar colecciones siempre
-  document.getElementById('bloque-colecciones').style.display = 'block';
-  if (!document.getElementById('checks-colecciones').children.length) {
-    buildMultiChecks('checks-colecciones', COLECCIONES, S.colecciones);
+  const bloqueColecciones = document.getElementById('bloque-colecciones');
+  const btnContinuar = document.getElementById('btn-continuar-3');
+
+  if(val) {
+    // ✅ Si es Sí, mostramos el siguiente bloque y habilitamos el botón
+    bloqueColecciones.style.display = 'block';
+    if(!document.getElementById('checks-colecciones').children.length) {
+      buildMultiChecks('checks-colecciones', COLECCIONES, S.colecciones);
+    }
+    btnContinuar.disabled = false;
+    btnContinuar.classList.add('btn-primary');
+    btnContinuar.classList.remove('btn-ghost');
+  } else {
+    // ❌ Si es No, ocultamos el siguiente bloque y bloqueamos continuar
+    bloqueColecciones.style.display = 'none';
+    S.colecciones = [];
+    btnContinuar.disabled = true;
+    btnContinuar.classList.remove('btn-primary');
+    btnContinuar.classList.add('btn-ghost');
+    toast("Debes actualizar la documentación para continuar", 'err');
   }
-
-  // ✅ Habilitar o deshabilitar botón de continuar
-  const btn = document.getElementById('btn-continuar-3');
-  btn.disabled = !val;          // Si la respuesta es NO (val=false), se bloquea
-  btn.classList.toggle('btn-primary', val);
-  btn.classList.toggle('btn-ghost', !val);
 }
 
-function setXpathDoc(val, el){
+function setXpathDoc(val, el) {
   S.xpathDoc = val;
-  marcarSeleccion(el);
+
+  // Marcar selección visual
+  document.querySelectorAll('#bloque-xpath .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  const bloqueAction = document.getElementById('bloque-action');
+  const btnContinuar = document.getElementById('btn-continuar-4'); // botón del siguiente paso
+
+  if(val) {
+    // ✅ Si Sí, mostrar siguiente bloque
+    bloqueAction.style.display = 'block';
+    btnContinuar.disabled = false;
+    btnContinuar.classList.add('btn-primary');
+    btnContinuar.classList.remove('btn-ghost');
+  } else {
+    // ❌ Si No, ocultar siguiente bloque y bloquear continuar
+    bloqueAction.style.display = 'none';
+    S.actionDoc = null; // limpiar selección de Action
+    btnContinuar.disabled = true;
+    btnContinuar.classList.remove('btn-primary');
+    btnContinuar.classList.add('btn-ghost');
+    toast("Debes actualizar XPATH para continuar", 'err');
+  }
 }
 
-function setActionDoc(val, el){
+function setActionDoc(val, el) {
   S.actionDoc = val;
-  marcarSeleccion(el);
+
+  // Marcar selección visual
+  document.querySelectorAll('#bloque-action .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  const btnContinuar = document.getElementById('btn-continuar-final'); // botón final
+
+  if(val) {
+    // ✅ Sí permite continuar
+    btnContinuar.disabled = false;
+    btnContinuar.classList.add('btn-primary');
+    btnContinuar.classList.remove('btn-ghost');
+  } else {
+    // ❌ No bloquea continuar
+    btnContinuar.disabled = true;
+    btnContinuar.classList.remove('btn-primary');
+    btnContinuar.classList.add('btn-ghost');
+    toast("Debes actualizar Action Type para continuar", 'err');
+  }
 }
 
 function marcarSeleccion(el){
