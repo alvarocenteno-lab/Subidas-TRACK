@@ -449,46 +449,62 @@ function buildMultiChecks(containerId, values, targetArray){
 
     d.onclick=()=>{
       d.classList.toggle('selected');
-      d.querySelector('.check-box').textContent =
-        d.classList.contains('selected') ? '✓' : '';
 
-      if(d.classList.contains('selected')){
-        targetArray.push(v);
+      const checked = d.classList.contains('selected');
+      d.querySelector('.check-box').textContent = checked ? '✓' : '';
+
+      if(checked){
+        if(!targetArray.includes(v)) targetArray.push(v);
       } else {
         const i = targetArray.indexOf(v);
         if(i>-1) targetArray.splice(i,1);
       }
 
-      // 👇 detectar XPATH
-      if(containerId === 'checks-colecciones'){
-        document.getElementById('bloque-xpath').style.display =
-          targetArray.includes('XPATH') ? 'block' : 'none';
+      // 🔥 FIX CLAVE: activar siguiente bloque correctamente
+      if(containerId === 'checks-jurisdiccion'){
+        if(targetArray.length > 0){
+          document.getElementById('bloque-doc-juri').style.display = 'block';
+        } else {
+          document.getElementById('bloque-doc-juri').style.display = 'none';
+          S.docJuri = null;
+        }
       }
-      if(containerId === 'checks-jurisdiccion' && targetArray.length){
-        document.getElementById('bloque-doc-juri').style.display = 'block';
+
+      // 🔥 FIX XPATH
+      if(containerId === 'checks-colecciones'){
+        const showXpath = targetArray.includes('XPATH');
+        document.getElementById('bloque-xpath').style.display = showXpath ? 'block' : 'none';
+
+        if(!showXpath){
+          S.xpathDoc = null;
+          S.actionDoc = null;
+        }
       }
     };
 
     cont.appendChild(d);
   });
 }
+  
 function toast(msg,type='ok'){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className=`toast ${type} show`;
   setTimeout(()=>t.classList.remove('show'),3500);
 }
+
 function selectModo(modo, el){
   S.modo = modo;
 
-  // marcar selección
   document.querySelectorAll('#bloque-modo .chip')
     .forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
 
-  // mostrar siguiente
+  // 👇 reset
+  S.jurisdicciones = [];
+  S.colecciones = [];
+
   document.getElementById('bloque-jurisdiccion').style.display = 'block';
 
-  // construir opciones
   buildMultiChecks('checks-jurisdiccion', JURIS, S.jurisdicciones);
 }
 
@@ -503,17 +519,28 @@ function setDocJuri(val, el){
     alert("Debes actualizar la documentación");
   }
 
+  // 🔥 FIX: mostrar colecciones SIEMPRE tras responder
   document.getElementById('bloque-colecciones').style.display = 'block';
-  buildMultiChecks('checks-colecciones', COLECCIONES, S.colecciones);
+
+  if(!document.getElementById('checks-colecciones').children.length){
+    buildMultiChecks('checks-colecciones', COLECCIONES, S.colecciones);
+  }
 }
+
 function setXpathDoc(val, el){
   S.xpathDoc = val;
-  toggleSelect(el, '#bloque-xpath');
+  marcarSeleccion(el);
 }
 
 function setActionDoc(val, el){
   S.actionDoc = val;
-  toggleSelect(el, '#bloque-xpath');
+  marcarSeleccion(el);
+}
+
+function marcarSeleccion(el){
+  el.parentElement.querySelectorAll('.chip')
+    .forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
 function toggleSelect(el, parent){
@@ -542,7 +569,8 @@ function continuarPaso3(){
   }
 
   if(S.modo === 'ONLINE'){
-    if(!S.jurisdicciones.length){
+
+    if(S.jurisdicciones.length === 0){
       alert("Selecciona al menos una jurisdicción");
       return;
     }
@@ -552,20 +580,25 @@ function continuarPaso3(){
       return;
     }
 
-    if(!S.colecciones.length){
+    if(S.colecciones.length === 0){
       alert("Selecciona al menos una colección");
       return;
     }
 
     if(S.colecciones.includes('XPATH')){
-      if(S.xpathDoc === null || S.actionDoc === null){
-        alert("Completa documentación de XPATH");
+      if(S.xpathDoc === null){
+        alert("Falta documentación de XPATH");
+        return;
+      }
+      if(S.actionDoc === null){
+        alert("Falta documentación de Action Type");
         return;
       }
     }
   }
 
-  goTo(3); // continuar flujo normal
+  // ✅ SI TODO OK
+  goTo(3);
 }
 
 function showSection(id,btn){
