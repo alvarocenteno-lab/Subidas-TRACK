@@ -241,53 +241,42 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
           <button class="btn btn-ghost" onclick="goTo(1)">← Atrás</button>
         </div>
       </div>
-      
-      <!-- P3: PIEZAS -->
-      <div class="pane" id="pane-3">
-        <div class="q-label">Paso 4 de 7</div>
-        <div class="q-title">¿Qué piezas se incluyen en esta subida?</div>
-        <div class="check-grid" id="checks-piezas"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="confirmarPiezas()">Continuar →</button>
-          <button class="btn btn-ghost" onclick="goTo(2)">← Atrás</button>
-        </div>
-      </div>
 
-      <!-- P4: IMPACTO -->
-      <div class="pane" id="pane-4">
-        <div class="q-label">Paso 5 de 7</div>
-        <div class="q-title">Revisión de impacto cruzado</div>
-        <div id="impacto-content"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="goTo(5)">He revisado el impacto →</button>
-          <button class="btn btn-ghost" onclick="goTo(3)">← Atrás</button>
+      <!-- PANEL DATOS -->
+      <div class="pane" id="pane-datos" style="display:none">
+        <div class="q-label">Paso 4</div>
+        <div class="q-title">Rellena los datos del cambio</div>
+    
+        <!-- User Code -->
+        <div id="bloque-user" class="input-block">
+            <input id="userCode" placeholder="Código de usuario" oninput="checkUserCode()">
         </div>
-      </div>
-
-      <!-- P5: DATOS -->
-      <div class="pane" id="pane-5">
-        <div class="q-label">Paso 6 de 7</div>
-        <div class="q-title">Datos de la subida</div>
-        <input class="input-field" type="text" id="f-ticket" placeholder="Ticket / ID  (ej. JIRA-1234)">
-        <input class="input-field" type="text" id="f-resp" placeholder="Responsable (nombre o alias)">
-        <input class="input-field" type="text" id="f-version" placeholder="Versión / tag  (ej. v2.3.1)">
-        <input class="input-field" type="text" id="f-desc" placeholder="Descripción breve del cambio">
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="goResumen()">Ver resumen →</button>
-          <button class="btn btn-ghost" onclick="goTo(4)">← Atrás</button>
+    
+        <!-- Jira Code -->
+        <div id="bloque-jira" class="input-block" style="display:none">
+            <input id="jiraCode" placeholder="Código Jira" oninput="checkJiraCode()">
         </div>
-      </div>
-
-      <!-- P6: RESUMEN -->
-      <div class="pane" id="pane-6">
-        <div class="q-label">Paso 7 de 7 — resumen</div>
-        <div class="q-title">Confirma antes de generar el checklist</div>
-        <div class="summary-card" id="summary-content"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="generarChecklist()">Generar checklist →</button>
-          <button class="btn btn-ghost" onclick="goTo(5)">← Editar datos</button>
+    
+        <!-- Action Type -->
+        <div id="bloque-action" class="input-block" style="display:none">
+            <select id="actionType" onchange="checkActionType()">
+                <option value="">Selecciona acción</option>
+                <option value="CREAR">CREAR</option>
+                <option value="REEMPLAZAR">REEMPLAZAR</option>
+                <option value="BORRAR">BORRAR</option>
+            </select>
         </div>
-      </div>
+    
+        <!-- Query -->
+        <div id="bloque-query" class="input-block" style="display:none">
+            <textarea id="query" placeholder="Query" oninput="checkQuery()"></textarea>
+        </div>
+    
+        <div class="btn-row">
+            <button id="btn-finalizar" class="btn btn-primary" onclick="finalizarDatos()" style="display:none">Finalizar →</button>
+            <button class="btn btn-ghost" onclick="goTo(3)">← Atrás</button>
+        </div>
+    </div>
 
       <!-- CHECKLIST -->
       <div class="pane" id="pane-cl">
@@ -611,6 +600,55 @@ document.addEventListener("input", (e)=>{
   }
 });
 
+// Mostrar panel de datos después de continuarPaso3
+function mostrarPanelDatos() {
+    document.getElementById('pane-datos').style.display = 'block';
+}
+
+// Validaciones paso a paso
+function checkUserCode() {
+    const val = document.getElementById('userCode').value.trim();
+    document.getElementById('bloque-jira').style.display = val ? 'block' : 'none';
+}
+
+function checkJiraCode() {
+    const val = document.getElementById('jiraCode').value.trim();
+    document.getElementById('bloque-action').style.display = val ? 'block' : 'none';
+}
+
+function checkActionType() {
+    const val = document.getElementById('actionType').value.trim();
+    document.getElementById('bloque-query').style.display = val ? 'block' : 'none';
+    document.getElementById('btn-finalizar').style.display = val ? 'inline-block' : 'none';
+}
+
+function checkQuery() {
+    const val = document.getElementById('query').value.trim();
+    document.getElementById('btn-finalizar').style.display = val ? 'inline-block' : 'none';
+}
+
+// Botón Finalizar
+function finalizarDatos() {
+    const userCode = document.getElementById('userCode').value.trim();
+    const jiraCode = document.getElementById('jiraCode').value.trim();
+    const actionType = document.getElementById('actionType').value.trim();
+    const query = document.getElementById('query').value.trim();
+
+    if (!userCode || !jiraCode || !actionType || !query) {
+        alert("Debes completar los 4 campos antes de continuar.");
+        return;
+    }
+
+    // Guardar datos en flujo
+    flujo.userCode = userCode;
+    flujo.jiraCode = jiraCode;
+    flujo.actionType = actionType;
+    flujo.query = query;
+
+    console.log("Datos completados:", flujo);
+    alert("Datos guardados. Puedes continuar al siguiente paso.");
+}
+  
 function continuarPaso3(){
 
   if(!S.modo){
@@ -648,7 +686,7 @@ function continuarPaso3(){
   }
 
   // ✅ SI TODO OK
-  goTo(3);
+  mostrarPanelDatos();
 }
 
 function showSection(id,btn){
