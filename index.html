@@ -534,26 +534,18 @@ function setDocJuri(val, el) {
 function setXpathDoc(val, el) {
   S.xpathDoc = val;
 
-  // Marcar selección visual
   document.querySelectorAll('#bloque-xpath .chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
 
   const bloqueAction = document.getElementById('bloque-action');
-  const btnContinuar = document.getElementById('btn-continuar-4'); // botón del siguiente paso
-
+  
   if(val) {
-    // ✅ Si Sí, mostrar siguiente bloque
     bloqueAction.style.display = 'block';
-    btnContinuar.disabled = false;
-    btnContinuar.classList.add('btn-primary');
-    btnContinuar.classList.remove('btn-ghost');
+    document.getElementById('btn-continuar-3').disabled = false; 
   } else {
-    // ❌ Si No, ocultar siguiente bloque y bloquear continuar
     bloqueAction.style.display = 'none';
-    S.actionDoc = null; // limpiar selección de Action
-    btnContinuar.disabled = true;
-    btnContinuar.classList.remove('btn-primary');
-    btnContinuar.classList.add('btn-ghost');
+    S.actionDoc = null;
+    document.getElementById('btn-continuar-3').disabled = true;
     toast("Debes actualizar XPATH para continuar", 'err');
   }
 }
@@ -565,15 +557,15 @@ function setActionDoc(val, el) {
   document.querySelectorAll('#bloque-action .chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
 
-  const btnContinuar = document.getElementById('btn-continuar-final'); // botón final
+  // En este caso, solo aseguramos que el botón de continuar esté habilitado
+  const btnContinuar = document.getElementById('btn-continuar-3');
 
-  if(val) {
-    // ✅ Sí permite continuar
+  if (val) {
     btnContinuar.disabled = false;
     btnContinuar.classList.add('btn-primary');
     btnContinuar.classList.remove('btn-ghost');
   } else {
-    // ❌ No bloquea continuar
+    S.actionDoc = null;
     btnContinuar.disabled = true;
     btnContinuar.classList.remove('btn-primary');
     btnContinuar.classList.add('btn-ghost');
