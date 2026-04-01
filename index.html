@@ -597,11 +597,6 @@ document.addEventListener("input", (e)=>{
   }
 });
 
-// Mostrar panel de datos después de continuarPaso3
-function mostrarPanelDatos() {
-    document.getElementById('pane-datos').style.display = 'block';
-}
-
 // Validaciones paso a paso
 function checkUserCode() {
     const val = document.getElementById('userCode').value.trim();
@@ -682,9 +677,17 @@ function continuarPaso3(){
     }
   }
 
-  goTo('datos');
-  document.getElementById('userCode').focus();
+  // Mostrar pane-datos de manera explícita
+  document.getElementById('pane-2').style.display = 'none';
+  document.getElementById('pane-datos').style.display = 'block';
+
+  // Enfocar en userCode después de que sea visible
+  setTimeout(() => {
+    const input = document.getElementById('userCode');
+    if(input) input.focus();
+  }, 50);
 }
+  
 function checkUserCode() {
   const val = document.getElementById('userCode').value.trim();
   if (val) {
