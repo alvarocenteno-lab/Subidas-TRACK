@@ -237,7 +237,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         </div>
       
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="continuarPaso3()">Continuar →</button>
+          <button id="btn-continuar-3" class="btn btn-primary" onclick="continuarPaso3()">Continuar →</button>
           <button class="btn btn-ghost" onclick="goTo(1)">← Atrás</button>
         </div>
       </div>
@@ -506,23 +506,24 @@ function selectModo(modo, el){
   buildMultiChecks('checks-jurisdiccion', JURIS, S.jurisdicciones);
 }
 
-function setDocJuri(val, el){
+function setDocJuri(val, el) {
   S.docJuri = val;
 
-  document.querySelectorAll('#bloque-doc-juri .chip')
-    .forEach(c=>c.classList.remove('selected'));
+  // Marcar visualmente
+  document.querySelectorAll('#bloque-doc-juri .chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
 
-  if(!val){
-    alert("Debes actualizar la documentación");
-  }
-
-  // 🔥 FIX: mostrar colecciones SIEMPRE tras responder
+  // Mostrar colecciones siempre
   document.getElementById('bloque-colecciones').style.display = 'block';
-
-  if(!document.getElementById('checks-colecciones').children.length){
+  if (!document.getElementById('checks-colecciones').children.length) {
     buildMultiChecks('checks-colecciones', COLECCIONES, S.colecciones);
   }
+
+  // ✅ Habilitar o deshabilitar botón de continuar
+  const btn = document.getElementById('btn-continuar-3');
+  btn.disabled = !val;          // Si la respuesta es NO (val=false), se bloquea
+  btn.classList.toggle('btn-primary', val);
+  btn.classList.toggle('btn-ghost', !val);
 }
 
 function setXpathDoc(val, el){
