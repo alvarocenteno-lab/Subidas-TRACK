@@ -344,7 +344,16 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const API  = `${SUPABASE_URL}/rest/v1/subidas`;
 const HDRS = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=representation'};
 
-const S = {ua:'',env:'',tipo:'',piezas:[],ticket:'',resp:'',version:'',desc:''};
+const S = {
+  ua:'', env:'', tipo:'', piezas:[],
+  ticket:'', resp:'', version:'', desc:'',
+  modo:null,
+  jurisdicciones:[],
+  docJuri:null,
+  colecciones:[],
+  xpathDoc:null,
+  actionDoc:null
+};
 let currentPane = 0;
 
 const TIPOS = {
@@ -385,17 +394,6 @@ const IMPACTO = {
   }
 };
 
-  const S = {
-  ua:'', env:'', tipo:'', piezas:[],
-  ticket:'', resp:'', version:'', desc:'',
-  modo:null,
-  jurisdicciones:[],
-  docJuri:null,
-  colecciones:[],
-  xpathDoc:null,
-  actionDoc:null
-};
-  
 const CHECKS = {
   previo_base:[
     'Ticket en estado "Ready for deploy"',
