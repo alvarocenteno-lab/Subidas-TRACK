@@ -645,15 +645,21 @@ function goTo(n){
   updateStepper(n==='cl'?7:n);
 }
 
-function selectUA(ua){
+function selectUA(ua) {
   S.ua = ua;
-  updateBreadcrumb();
 
-  if(ua === 'XREN'){
-    goTo(1);
-  } else {
-    goTo(1);
-  }
+  // marcar visualmente el chip seleccionado
+  document.querySelectorAll('#pane-0 .chip').forEach(c => {
+    c.classList.remove('selected');
+  });
+
+  // marcar el chip clicado como seleccionado
+  const chips = Array.from(document.querySelectorAll('#pane-0 .chip'));
+  const selectedChip = chips.find(c => c.textContent.includes(ua));
+  if(selectedChip) selectedChip.classList.add('selected');
+
+  // activar siguiente paso automáticamente si quieres
+  goTo(1); // pasa al siguiente pane
 }
 function selectEnv(env){S.env=env;updateBreadcrumb();goTo(2);}
 function validarXREN(){
