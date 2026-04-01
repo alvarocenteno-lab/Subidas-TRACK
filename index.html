@@ -243,7 +243,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       </div>
 
       <!-- PANEL DATOS -->
-      <div class="pane" id="pane-datos" style="display:none">
+      <div class="pane" id="pane-3" style="display:none">
         <div class="q-label">Paso 4</div>
         <div class="q-title">Rellena los datos del cambio</div>
       
@@ -676,16 +676,7 @@ function continuarPaso3(){
       }
     }
   }
-
-  // Mostrar pane-datos de manera explícita
-  document.getElementById('pane-2').style.display = 'none';
-  document.getElementById('pane-datos').style.display = 'block';
-
-  // Enfocar en userCode después de que sea visible
-  setTimeout(() => {
-    const input = document.getElementById('userCode');
-    if(input) input.focus();
-  }, 50);
+  goTo(3); 
 }
   
 function checkUserCode() {
