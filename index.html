@@ -682,7 +682,7 @@ function continuarPaso3(){
     }
   }
 
-  goTo('pane-datos');
+  goTo('datos');
   document.getElementById('userCode').focus();
 }
 function checkUserCode() {
@@ -785,7 +785,7 @@ function goTo(n){
   document.getElementById(oldId).classList.remove('active');
 
   currentPane=n;
-  const newId=n==='cl'?'pane-cl':'pane-'+n;
+  const newId = (n==='cl' || n==='datos') ? 'pane-'+n : 'pane-'+n;
   document.getElementById(newId).classList.add('active');
 
   // 👇 lógica dinámica
