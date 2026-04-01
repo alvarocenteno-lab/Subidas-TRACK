@@ -191,51 +191,57 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         <div class="q-label">Paso 3</div>
         <div class="q-title">Configuración específica</div>
       
-        <div id="xren-flow" style="display:none">
+        <!-- P4 -->
+        <div id="bloque-modo">
+          <div class="q-title">¿Vas a editar ONLINE o RECON?</div>
           <div class="chip-grid">
-            <div class="chip" onclick="selectModo('ONLINE')">ONLINE</div>
-            <div class="chip" onclick="selectModo('RECON')">RECON</div>
+            <div class="chip" onclick="selectModo('ONLINE', this)">ONLINE</div>
+            <div class="chip" onclick="selectModo('RECON', this)">RECON</div>
+          </div>
+        </div>
+      
+        <!-- P5 -->
+        <div id="bloque-jurisdiccion" style="display:none">
+          <div class="q-title">¿Para qué jurisdicción vas a hacer cambios?</div>
+          <div class="check-grid" id="checks-jurisdiccion"></div>
+        </div>
+      
+        <!-- P6 -->
+        <div id="bloque-doc-juri" style="display:none">
+          <div class="q-title">¿Has actualizado la documentación?</div>
+          <div class="chip-grid">
+            <div class="chip" onclick="setDocJuri(true,this)">Sí</div>
+            <div class="chip" onclick="setDocJuri(false,this)">No</div>
+          </div>
+        </div>
+      
+        <!-- P7 -->
+        <div id="bloque-colecciones" style="display:none">
+          <div class="q-title">¿Sobre qué colección o colecciones?</div>
+          <div class="check-grid" id="checks-colecciones"></div>
+        </div>
+      
+        <!-- P8 + P9 -->
+        <div id="bloque-xpath" style="display:none">
+          <div class="q-title">¿Has actualizado documentación XPATH?</div>
+          <div class="chip-grid">
+            <div class="chip" onclick="setXpathDoc(true,this)">Sí</div>
+            <div class="chip" onclick="setXpathDoc(false,this)">No</div>
+          </div>
+      
+          <div class="q-title">¿Has actualizado Action Type?</div>
+          <div class="chip-grid">
+            <div class="chip" onclick="setActionDoc(true,this)">Sí</div>
+            <div class="chip" onclick="setActionDoc(false,this)">No</div>
           </div>
         </div>
       
         <div class="btn-row">
+          <button class="btn btn-primary" onclick="continuarPaso3()">Continuar →</button>
           <button class="btn btn-ghost" onclick="goTo(1)">← Atrás</button>
         </div>
       </div>
-      <div id="xren-online" style="display:none">
       
-        <!-- P5 -->
-        <div class="q-title">¿Para qué jurisdicción vas a hacer cambios?</div>
-        <input class="input-field" id="jurisdiccion">
-      
-        <!-- P6 -->
-        <div class="q-title">¿Has actualizado la documentación de la jurisdicción?</div>
-        <div class="chip-grid">
-          <div class="chip" onclick="setDocJuri(true)">Sí</div>
-          <div class="chip" onclick="setDocJuri(false)">No</div>
-        </div>
-      
-        <!-- P7 -->
-        <div class="q-title">¿Sobre qué colección o colecciones?</div>
-        <input class="input-field" id="colecciones">
-      
-        <!-- P8 -->
-        <div id="xpath-block" style="display:none">
-          <div class="q-title">¿Has actualizado la documentación genérica de XPATHS?</div>
-          <div class="chip-grid">
-            <div class="chip" onclick="setXpathDoc(true)">Sí</div>
-            <div class="chip" onclick="setXpathDoc(false)">No</div>
-          </div>
-      
-          <!-- P9 -->
-          <div class="q-title">¿Has actualizado Action Type?</div>
-          <div class="chip-grid">
-            <div class="chip" onclick="setActionDoc(true)">Sí</div>
-            <div class="chip" onclick="setActionDoc(false)">No</div>
-          </div>
-        </div>
-      
-      </div>  
       <!-- P3: PIEZAS -->
       <div class="pane" id="pane-3">
         <div class="q-label">Paso 4 de 7</div>
@@ -379,6 +385,17 @@ const IMPACTO = {
   }
 };
 
+  const S = {
+  ua:'', env:'', tipo:'', piezas:[],
+  ticket:'', resp:'', version:'', desc:'',
+  modo:null,
+  jurisdicciones:[],
+  docJuri:null,
+  colecciones:[],
+  xpathDoc:null,
+  actionDoc:null
+};
+  
 const CHECKS = {
   previo_base:[
     'Ticket en estado "Ready for deploy"',
@@ -405,7 +422,9 @@ const CHECKS = {
     oracle:['Integridad referencial verificada','Aplicación lee y escribe sin errores','Logs sin errores SQL','Ticket a "Deployed" y equipo notificado']
   }
 };
-
+const JURIS = ['SFTR','MIFID','MMSR','ETDR'];
+const COLECCIONES = ['XPATH','REPORT FIELD','BUSINESS RULES','WORKSTATEMENTS','QUERY'];
+  
 const ERRORES=[
   {ua:'XCTT/XDTS',q:'El pod no arranca tras el despliegue',a:`1. kubectl logs <pod> --previous\n2. ClassNotFoundException / NoSuchMethodError → librería incompatible\n3. Verificar variables de entorno del configmap\n4. OOMKilled → aumentar límite de memoria\n5. Rollback al artefacto anterior si no se resuelve en < 15 min`},
   {ua:'XCTT/XDTS',q:'El health check devuelve 503 tras arrancar',a:`1. Comprobar que BBDD y dependencias son accesibles desde el pod\n2. Revisar timeout de conexión en logs de inicio\n3. Verificar secrets y credenciales de entorno\n4. Comprobar que el puerto coincide con el del service`},
@@ -419,40 +438,88 @@ const ERRORES=[
 
 function getType(ua){return ua==='XCTT'||ua==='XDTS'?'java':ua==='XREN'?'mongo':'oracle'}
 
+function buildMultiChecks(containerId, values, targetArray){
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = '';
+
+  values.forEach(v=>{
+    const d = document.createElement('div');
+    d.className='check-row';
+    d.innerHTML=`<div class="check-box"></div><span>${v}</span>`;
+
+    d.onclick=()=>{
+      d.classList.toggle('selected');
+      d.querySelector('.check-box').textContent =
+        d.classList.contains('selected') ? '✓' : '';
+
+      if(d.classList.contains('selected')){
+        targetArray.push(v);
+      } else {
+        const i = targetArray.indexOf(v);
+        if(i>-1) targetArray.splice(i,1);
+      }
+
+      // 👇 detectar XPATH
+      if(containerId === 'checks-colecciones'){
+        document.getElementById('bloque-xpath').style.display =
+          targetArray.includes('XPATH') ? 'block' : 'none';
+      }
+      if(containerId === 'checks-jurisdiccion' && targetArray.length){
+        document.getElementById('bloque-doc-juri').style.display = 'block';
+      }
+    };
+
+    cont.appendChild(d);
+  });
+}
 function toast(msg,type='ok'){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className=`toast ${type} show`;
   setTimeout(()=>t.classList.remove('show'),3500);
 }
-function selectModo(modo){
+function selectModo(modo, el){
   S.modo = modo;
 
-  if(modo === 'ONLINE'){
-    document.getElementById('xren-online').style.display = 'block';
-  } else {
-    document.getElementById('xren-online').style.display = 'none';
-  }
+  // marcar selección
+  document.querySelectorAll('#bloque-modo .chip')
+    .forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  // mostrar siguiente
+  document.getElementById('bloque-jurisdiccion').style.display = 'block';
+
+  // construir opciones
+  buildMultiChecks('checks-jurisdiccion', JURIS, S.jurisdicciones);
 }
 
-function setDocJuri(val){
+function setDocJuri(val, el){
   S.docJuri = val;
-  if(!val){
-    alert("Debes actualizar la documentación antes de continuar");
-  }
-}
 
-function setXpathDoc(val){
+  document.querySelectorAll('#bloque-doc-juri .chip')
+    .forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  if(!val){
+    alert("Debes actualizar la documentación");
+  }
+
+  document.getElementById('bloque-colecciones').style.display = 'block';
+  buildMultiChecks('checks-colecciones', COLECCIONES, S.colecciones);
+}
+function setXpathDoc(val, el){
   S.xpathDoc = val;
-  if(!val){
-    alert("Debes actualizar la documentación de XPATH");
-  }
+  toggleSelect(el, '#bloque-xpath');
 }
 
-function setActionDoc(val){
+function setActionDoc(val, el){
   S.actionDoc = val;
-  if(!val){
-    alert("Debes actualizar Action Type");
-  }
+  toggleSelect(el, '#bloque-xpath');
+}
+
+function toggleSelect(el, parent){
+  el.parentElement.querySelectorAll('.chip')
+    .forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
 // detectar si hay XPATH
@@ -466,6 +533,41 @@ document.addEventListener("input", (e)=>{
     }
   }
 });
+
+function continuarPaso3(){
+
+  if(!S.modo){
+    alert("Selecciona ONLINE o RECON");
+    return;
+  }
+
+  if(S.modo === 'ONLINE'){
+    if(!S.jurisdicciones.length){
+      alert("Selecciona al menos una jurisdicción");
+      return;
+    }
+
+    if(S.docJuri === null){
+      alert("Indica si has actualizado la documentación");
+      return;
+    }
+
+    if(!S.colecciones.length){
+      alert("Selecciona al menos una colección");
+      return;
+    }
+
+    if(S.colecciones.includes('XPATH')){
+      if(S.xpathDoc === null || S.actionDoc === null){
+        alert("Completa documentación de XPATH");
+        return;
+      }
+    }
+  }
+
+  goTo(3); // continuar flujo normal
+}
+
 function showSection(id,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -658,7 +760,12 @@ async function guardarSubida(){
   const all=document.querySelectorAll('#pane-cl .cl-item').length;
   const done=document.querySelectorAll('#pane-cl .cl-item.done').length;
   const pct=Math.round(done/all*100);
-  const payload={ua:S.ua,env:S.env,tipo:S.tipo,ticket:S.ticket!=='—'?S.ticket:null,responsable:S.resp!=='—'?S.resp:null,version:S.version!=='—'?S.version:null,descripcion:S.desc!=='—'?S.desc:null,pct,checks_total:all,checks_done:done};
+  const payload={ua:S.ua,env:S.env,tipo:S.tipo,ticket:S.ticket!=='—'?S.ticket:null,responsable:S.resp!=='—'?S.resp:null,version:S.version!=='—'?S.version:null,descripcion:S.desc!=='—'?S.desc:null,pct,checks_total:all,checks_done:done,modo: S.modo,
+  jurisdicciones: S.jurisdicciones,
+  doc_jurisdiccion: S.docJuri,
+  colecciones: S.colecciones,
+  xpath_doc: S.xpathDoc,
+  action_doc: S.actionDoc};
   try{
     const res=await fetch(API,{method:'POST',headers:HDRS,body:JSON.stringify(payload)});
     if(!res.ok) throw new Error(await res.text());
