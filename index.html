@@ -1,1 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblia de Subidas</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0f11;--surface:#17171a;--surface2:#1e1e22;--border:#2a2a30;--border2:#38383f;--text:#e8e8ec;--text2:#8888a0;--text3:#55556a;--accent:#5b8def;--accent2:#3a6bcc;--green:#3ecf8e;--amber:#f59e0b;--red:#ef4444;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--r:8px;--rl:12px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-mark{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+.logo-name{font-size:15px;font-weight:500}
+.nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;font-family:var(--sans)}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--surface2);color:var(--text);border-left:2px solid var(--accent);padding-left:8px}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:var(--mono)}
+.main{margin-left:220px;flex:1;padding:36px 40px;max-width:calc(100vw - 220px)}
+.section{display:none}.section.active{display:block}
+.page-header{margin-bottom:28px}
+.page-title{font-size:22px;font-weight:500;letter-spacing:-.02em;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text2)}
+.stepper{display:flex;align-items:center;margin-bottom:2rem}
+.step-dot{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text2);flex-shrink:0;transition:all .2s;background:var(--surface)}
+.step-dot.active{border-color:var(--text);color:var(--text)}
+.step-dot.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.step-line{flex:1;height:1px;background:var(--border)}
+.step-line.done{background:var(--accent)}
+.breadcrumb{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;min-height:20px}
+.bc-item{font-size:12px;color:var(--accent);font-family:var(--mono)}
+.bc-sep{font-size:11px;color:var(--text3)}
+.pane{display:none}
+.pane.active{display:block;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.q-label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;font-family:var(--mono)}
+.q-title{font-size:20px;font-weight:500;margin-bottom:1.5rem;line-height:1.4;letter-spacing:-.01em}
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.5rem}
+.chip{padding:9px 18px;border:1px solid var(--border2);border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text);background:var(--surface);transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--text2);background:var(--surface2)}
+.chip.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip-sub{font-size:11px;color:var(--text2);display:block;margin-top:2px}
+.chip.selected .chip-sub{color:rgba(255,255,255,.7)}
+.check-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:1.5rem}
+.check-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all .15s;background:var(--surface)}
+.check-row:hover{border-color:var(--border2);background:var(--surface2)}
+.check-row.selected{border-color:var(--accent);background:rgba(91,141,239,.08)}
+.check-box{width:16px;height:16px;border:1px solid var(--border2);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;color:#fff}
+.check-row.selected .check-box{background:var(--accent);border-color:var(--accent)}
+.input-field{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:var(--sans);background:var(--surface2);color:var(--text);margin-bottom:10px;transition:border-color .15s}
+.input-field:focus{outline:none;border-color:var(--accent)}
+.input-field::placeholder{color:var(--text3)}
+.btn{padding:9px 18px;border:1px solid var(--border2);border-radius:var(--r);font-size:13px;font-family:var(--sans);cursor:pointer;background:transparent;color:var(--text);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--surface2)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn-ghost{border-color:transparent;color:var(--text2)}
+.btn-ghost:hover{color:var(--text);background:var(--surface2)}
+.btn-danger{border-color:var(--red);color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,.1)}
+.btn-row{display:flex;gap:8px;align-items:center;margin-top:1rem}
+.impact-alert{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:var(--r);padding:14px 16px;margin-bottom:1.5rem}
+.impact-alert-title{font-size:11px;font-weight:500;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:10px}
+.impact-line{display:flex;gap:8px;font-size:12px;color:rgba(245,158,11,.9);margin-bottom:5px;align-items:flex-start}
+.impact-tag{font-size:10px;background:rgba(245,158,11,.15);color:var(--amber);padding:1px 6px;border-radius:4px;font-weight:500;flex-shrink:0;margin-top:1px;font-family:var(--mono)}
+.impact-ok{background:rgba(62,207,142,.07);border:1px solid rgba(62,207,142,.2);border-radius:var(--r);padding:14px 16px;margin-bottom:1.5rem;font-size:13px;color:rgba(62,207,142,.9)}
+.summary-card{background:var(--surface2);border-radius:var(--rl);padding:16px 20px;margin-bottom:1.5rem;border:1px solid var(--border)}
+.summary-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;gap:16px}
+.summary-row:last-child{border-bottom:none;padding-bottom:0}
+.summary-key{color:var(--text2);flex-shrink:0}
+.summary-val{text-align:right;font-weight:500;font-family:var(--mono);font-size:12px;word-break:break-word;max-width:60%}
+.cl-section{margin-bottom:18px}
+.cl-head{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:4px;font-family:var(--mono)}
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:background .1s}
+.cl-item:hover{background:var(--surface2)}
+.cl-item.done .cl-text{text-decoration:line-through;color:var(--text3)}
+.cl-box{width:16px;height:16px;border:1px solid var(--border2);border-radius:4px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;color:#fff}
+.cl-item.done .cl-box{background:var(--green);border-color:var(--green)}
+.cl-text{font-size:13px;line-height:1.5}
+.cl-extra-tag{display:inline-block;font-size:9px;padding:1px 5px;background:rgba(245,158,11,.15);color:var(--amber);border-radius:3px;margin-left:6px;font-weight:500;vertical-align:middle;font-family:var(--mono)}
+.cl-item.extra-item{border-left:2px solid rgba(245,158,11,.4);padding-left:8px;border-radius:0}
+.prog-wrap{margin-bottom:1.5rem}
+.prog-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px;font-family:var(--mono)}
+.prog-bar{height:3px;background:var(--surface2);border-radius:2px;border:1px solid var(--border)}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease}
+.prog-fill.complete{background:var(--green)}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.stat-n{font-size:26px;font-weight:300;font-family:var(--mono);display:block;margin-bottom:2px}
+.stat-l{font-size:11px;color:var(--text2)}
+.hist-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 18px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;transition:border-color .15s}
+.hist-item:hover{border-color:var(--border2)}
+.hist-ua{font-family:var(--mono);font-size:13px;font-weight:500;margin-right:8px}
+.hist-meta{font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+.hist-desc{font-size:12px;color:var(--text2);margin-top:3px}
+.hist-right{text-align:right;flex-shrink:0}
+.hist-pct{font-family:var(--mono);font-size:20px;font-weight:300;display:block}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-family:var(--mono);font-weight:500;letter-spacing:.04em}
+.badge-blue{background:rgba(91,141,239,.15);color:var(--accent)}
+.badge-green{background:rgba(62,207,142,.15);color:var(--green)}
+.badge-amber{background:rgba(245,158,11,.15);color:var(--amber)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.error-item{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:8px}
+.error-q{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;transition:background .1s;gap:12px}
+.error-q:hover{background:var(--surface2)}
+.error-q-left{display:flex;align-items:center;gap:10px;font-size:13px}
+.error-toggle{font-family:var(--mono);color:var(--text3);font-size:16px;flex-shrink:0}
+.error-a{display:none;padding:14px 16px;border-top:1px solid var(--border);background:var(--surface2);font-size:12px;color:var(--text2);line-height:1.8;white-space:pre-wrap;font-family:var(--mono)}
+.error-a.show{display:block}
+.divider{height:1px;background:var(--border);margin:1.5rem 0}
+.empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:13px;font-family:var(--mono)}
+.loader{display:flex;align-items:center;gap:10px;color:var(--text2);font-size:12px;font-family:var(--mono);padding:20px 0}
+.loader-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+.loader-dot:nth-child(2){animation-delay:.2s}
+.loader-dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:12px 18px;font-size:13px;z-index:100;transform:translateY(80px);opacity:0;transition:all .3s ease;max-width:320px;font-family:var(--mono)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:rgba(62,207,142,.4);color:var(--green)}
+.toast.err{border-color:rgba(239,68,68,.4);color:var(--red)}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:16px;max-width:100vw}.stats-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">// deploy</div>
+      <div class="logo-name">Biblia de Subidas</div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="showSection('nueva',this)"><span class="nav-icon">⊕</span> Nueva subida</button>
+      <button class="nav-item" onclick="showSection('historial',this)"><span class="nav-icon">≡</span> Historial</button>
+      <button class="nav-item" onclick="showSection('errores',this)"><span class="nav-icon">⚠</span> Errores comunes</button>
+    </nav>
+    <div class="sidebar-footer">v2.0 · equipo deploy</div>
+  </aside>
 
+  <main class="main">
+
+    <!-- NUEVA SUBIDA -->
+    <div class="section active" id="sec-nueva">
+      <div class="page-header">
+        <div class="page-title">Nueva subida</div>
+        <div class="page-sub">Wizard paso a paso — el checklist se adapta a tus respuestas</div>
+      </div>
+      <div class="stepper" id="stepper">
+        <div class="step-dot active" id="sd0">1</div><div class="step-line" id="sl0"></div>
+        <div class="step-dot" id="sd1">2</div><div class="step-line" id="sl1"></div>
+        <div class="step-dot" id="sd2">3</div><div class="step-line" id="sl2"></div>
+        <div class="step-dot" id="sd3">4</div><div class="step-line" id="sl3"></div>
+        <div class="step-dot" id="sd4">5</div><div class="step-line" id="sl4"></div>
+        <div class="step-dot" id="sd5">6</div><div class="step-line" id="sl5"></div>
+        <div class="step-dot" id="sd6">7</div>
+      </div>
+      <div class="breadcrumb" id="breadcrumb"></div>
+
+      <!-- P0: UUAA -->
+      <div class="pane active" id="pane-0">
+        <div class="q-label">Paso 1 de 7</div>
+        <div class="q-title">¿Cuál es la UUAA de la subida?</div>
+        <div class="chip-grid">
+          <div class="chip" onclick="selectUA('XCTT')">XCTT<span class="chip-sub">Código Java</span></div>
+          <div class="chip" onclick="selectUA('XDTS')">XDTS<span class="chip-sub">Código Java</span></div>
+          <div class="chip" onclick="selectUA('XREN')">XREN<span class="chip-sub">MongoDB</span></div>
+          <div class="chip" onclick="selectUA('KYFD')">KYFD<span class="chip-sub">Oracle / BBDD</span></div>
+        </div>
+      </div>
+
+      <!-- P1: ENTORNO -->
+      <div class="pane" id="pane-1">
+        <div class="q-label">Paso 2 de 7</div>
+        <div class="q-title">¿A qué entorno se sube?</div>
+        <div class="chip-grid">
+          <div class="chip" onclick="selectEnv('INT')">INT<span class="chip-sub">Integración</span></div>
+          <div class="chip" onclick="selectEnv('PRE')">PRE<span class="chip-sub">Pre-producción</span></div>
+          <div class="chip" onclick="selectEnv('PRO')">PRO<span class="chip-sub">Producción</span></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-ghost" onclick="goTo(0)">← Atrás</button></div>
+      </div>
+
+      <!-- P2: TIPO -->
+      <div class="pane" id="pane-2">
+        <div class="q-label">Paso 3 de 7</div>
+        <div class="q-title">¿Qué tipo de cambio es?</div>
+        <div class="chip-grid" id="chips-tipo"></div>
+        <div class="btn-row"><button class="btn btn-ghost" onclick="goTo(1)">← Atrás</button></div>
+      </div>
+
+      <!-- P3: PIEZAS -->
+      <div class="pane" id="pane-3">
+        <div class="q-label">Paso 4 de 7</div>
+        <div class="q-title">¿Qué piezas se incluyen en esta subida?</div>
+        <div class="check-grid" id="checks-piezas"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="confirmarPiezas()">Continuar →</button>
+          <button class="btn btn-ghost" onclick="goTo(2)">← Atrás</button>
+        </div>
+      </div>
+
+      <!-- P4: IMPACTO -->
+      <div class="pane" id="pane-4">
+        <div class="q-label">Paso 5 de 7</div>
+        <div class="q-title">Revisión de impacto cruzado</div>
+        <div id="impacto-content"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goTo(5)">He revisado el impacto →</button>
+          <button class="btn btn-ghost" onclick="goTo(3)">← Atrás</button>
+        </div>
+      </div>
+
+      <!-- P5: DATOS -->
+      <div class="pane" id="pane-5">
+        <div class="q-label">Paso 6 de 7</div>
+        <div class="q-title">Datos de la subida</div>
+        <input class="input-field" type="text" id="f-ticket" placeholder="Ticket / ID  (ej. JIRA-1234)">
+        <input class="input-field" type="text" id="f-resp" placeholder="Responsable (nombre o alias)">
+        <input class="input-field" type="text" id="f-version" placeholder="Versión / tag  (ej. v2.3.1)">
+        <input class="input-field" type="text" id="f-desc" placeholder="Descripción breve del cambio">
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="goResumen()">Ver resumen →</button>
+          <button class="btn btn-ghost" onclick="goTo(4)">← Atrás</button>
+        </div>
+      </div>
+
+      <!-- P6: RESUMEN -->
+      <div class="pane" id="pane-6">
+        <div class="q-label">Paso 7 de 7 — resumen</div>
+        <div class="q-title">Confirma antes de generar el checklist</div>
+        <div class="summary-card" id="summary-content"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="generarChecklist()">Generar checklist →</button>
+          <button class="btn btn-ghost" onclick="goTo(5)">← Editar datos</button>
+        </div>
+      </div>
+
+      <!-- CHECKLIST -->
+      <div class="pane" id="pane-cl">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+          <div>
+            <div style="font-size:18px;font-weight:500;letter-spacing:-.01em" id="cl-titulo"></div>
+            <div style="font-size:12px;color:var(--text2);margin-top:2px;font-family:var(--mono)" id="cl-subtitulo"></div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="resetWizard()">Nueva subida</button>
+        </div>
+        <div class="divider"></div>
+        <div class="prog-wrap">
+          <div class="prog-meta"><span id="prog-txt">0 / 0 pasos</span><span id="prog-pct">0%</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+        </div>
+        <div id="cl-body"></div>
+        <div class="btn-row" style="margin-top:1.5rem">
+          <button class="btn btn-primary" onclick="guardarSubida()">Guardar en historial →</button>
+          <button class="btn btn-danger" onclick="resetWizard()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="section" id="sec-historial">
+      <div class="page-header">
+        <div class="page-title">Historial de subidas</div>
+        <div class="page-sub">Registro compartido del equipo — sincronizado con Supabase</div>
+      </div>
+      <div class="stats-grid" id="hist-stats" style="display:none"></div>
+      <div id="hist-list"></div>
+    </div>
+
+    <!-- ERRORES -->
+    <div class="section" id="sec-errores">
+      <div class="page-header">
+        <div class="page-title">Errores comunes</div>
+        <div class="page-sub">Referencia rápida por tipo de problema — haz clic para expandir</div>
+      </div>
+      <div id="errores-list"></div>
+    </div>
+
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  ⚠  SUSTITUYE ESTOS DOS VALORES CON LOS DE SUPABASE
+const SUPABASE_URL = 'https://hnuphtpkcinhgtjutmjz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhudXBodHBrY2luaGd0anV0bWp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTI4OTksImV4cCI6MjA5MDU2ODg5OX0.DLlKBnzd4EVuiY4YqQBjxhOVNt2KwTyoVGOZwMGXVjg';
+// ═══════════════════════════════════════════════════════
+
+const API  = `${SUPABASE_URL}/rest/v1/subidas`;
+const HDRS = {'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Prefer':'return=representation'};
+
+const S = {ua:'',env:'',tipo:'',piezas:[],ticket:'',resp:'',version:'',desc:''};
+let currentPane = 0;
+
+const TIPOS = {
+  XCTT:['Nuevo endpoint REST','Cambio en lógica de negocio','Refactor de servicio','Actualización de librería','Corrección de bug','Fix de seguridad'],
+  XDTS:['Nuevo endpoint REST','Cambio en lógica de negocio','Refactor de servicio','Actualización de librería','Corrección de bug','Fix de seguridad'],
+  XREN:['Nueva colección','Cambio de esquema','Nuevo índice','Migración de datos','Script de limpieza'],
+  KYFD:['Nueva tabla','Cambio de columna','Nuevo índice','Stored procedure','Script de migración','Rollback script']
+};
+
+const PIEZAS = {
+  java:  ['Artefacto JAR / WAR','Ficheros de configuración (application.yml)','Variables de entorno / secrets','Scripts de inicio / healthcheck','Librerías / dependencias'],
+  mongo: ['Script de migración (.js)','Definición de índices','Seed de datos','Backup previo de la colección'],
+  oracle:['Script DDL (CREATE / ALTER)','Script DML (INSERT / UPDATE)','Stored procedures / funciones','Script de rollback','Backup / export previo']
+};
+
+const IMPACTO = {
+  XCTT:{
+    'Nuevo endpoint REST':        [{ua:'XDTS',msg:'Revisar si XDTS consume este endpoint — actualizar cliente si es necesario'}],
+    'Cambio en lógica de negocio':[{ua:'XDTS',msg:'Verificar contrato XCTT↔XDTS — puede romper flujos compartidos'}],
+    'Actualización de librería':  [{ua:'XDTS',msg:'Comprobar que XDTS usa versión compatible de la misma librería'}],
+    'Fix de seguridad':           [{ua:'XDTS',msg:'Evaluar si XDTS tiene la misma vulnerabilidad y requiere fix paralelo'}]
+  },
+  XDTS:{
+    'Nuevo endpoint REST':        [{ua:'XCTT',msg:'Revisar si XCTT consume este endpoint — actualizar cliente si es necesario'}],
+    'Cambio en lógica de negocio':[{ua:'XCTT',msg:'Verificar contrato XDTS↔XCTT — puede romper flujos compartidos'},{ua:'XREN',msg:'Comprobar compatibilidad de modelos Mongo que lee XDTS'}],
+    'Actualización de librería':  [{ua:'XCTT',msg:'Comprobar que XCTT usa versión compatible de la misma librería'}],
+    'Fix de seguridad':           [{ua:'XCTT',msg:'Evaluar si XCTT tiene la misma vulnerabilidad y requiere fix paralelo'}]
+  },
+  XREN:{
+    'Cambio de esquema': [{ua:'XDTS',msg:'XDTS puede leer esta colección — validar compatibilidad de mapeo'},{ua:'XCTT',msg:'Verificar si XCTT accede directamente a esta colección'}],
+    'Nueva colección':   [{ua:'XDTS',msg:'Confirmar que XDTS conoce la nueva colección si la necesita consumir'}],
+    'Migración de datos':[{ua:'XDTS',msg:'Coordinar ventana — evitar lecturas durante la migración'},{ua:'XCTT',msg:'Coordinar ventana si XCTT accede a estos datos'}]
+  },
+  KYFD:{
+    'Cambio de columna':   [{ua:'XCTT',msg:'Verificar queries de XCTT que referencien esta columna'},{ua:'XDTS',msg:'Verificar queries de XDTS que referencien esta columna'}],
+    'Nueva tabla':         [{ua:'XCTT',msg:'Confirmar permisos de XCTT sobre la nueva tabla'},{ua:'XDTS',msg:'Confirmar permisos de XDTS sobre la nueva tabla'}],
+    'Script de migración': [{ua:'XCTT',msg:'Coordinar ventana — posible bloqueo de tablas durante migración'},{ua:'XDTS',msg:'Coordinar ventana — posible bloqueo de tablas durante migración'}]
+  }
+};
+
+const CHECKS = {
+  previo_base:[
+    'Ticket en estado "Ready for deploy"',
+    'PR aprobado por al menos 1 revisor',
+    'Tests unitarios pasando en CI',
+    'Rama actualizada con la rama destino',
+    'Plan de rollback documentado en el ticket',
+    'Comunicación enviada al equipo con ventana de subida'
+  ],
+  previo_pro:[
+    'Aprobación formal del change manager / responsable funcional',
+    'CAB / comité de cambios notificado',
+    'Ventana de mantenimiento reservada en calendario',
+    'Equipo de guardia localizable durante la subida'
+  ],
+  subida:{
+    java:  ['Verificar versión del artefacto (jar/war)','Confirmar parámetros de JVM y memoria','Revisar variables de entorno del entorno destino','Ejecutar despliegue en plataforma (OpenShift / Jenkins / pipeline)','Pod/contenedor arranca sin errores en logs','Health check responde 200','Sin excepciones en logs de inicio'],
+    mongo: ['Backup previo de la colección afectada','Revisar script en entorno inferior antes de ejecutar','Ejecutar con usuario de escritura controlada','Verificar documentos afectados vs esperado','Comprobar índices tras el cambio','Aplicación lee datos correctamente post-cambio'],
+    oracle:['Backup / export previo de la tabla o esquema','Revisar script SQL en entorno inferior','Ejecutar en transacción — no hacer COMMIT hasta validar','Verificar filas afectadas vs esperado','Comprobar constraints e índices','Hacer COMMIT o ROLLBACK según resultado','Aplicación lee y escribe correctamente post-cambio']
+  },
+  post:{
+    java:  ['Smoke test — endpoints principales afectados responden OK','Logs 5 min post-arranque: sin errores ni warnings nuevos','Métricas OK — CPU, memoria y latencia dentro de rango normal','Test de regresión básico del flujo afectado','Integración con otros sistemas OK (llamadas entrantes/salientes)','Ticket a "Deployed" y equipo notificado'],
+    mongo: ['Integridad de datos verificada tras el cambio','Aplicación lee sin errores','Logs sin errores de mapeo','Ticket a "Deployed" y equipo notificado'],
+    oracle:['Integridad referencial verificada','Aplicación lee y escribe sin errores','Logs sin errores SQL','Ticket a "Deployed" y equipo notificado']
+  }
+};
+
+const ERRORES=[
+  {ua:'XCTT/XDTS',q:'El pod no arranca tras el despliegue',a:`1. kubectl logs <pod> --previous\n2. ClassNotFoundException / NoSuchMethodError → librería incompatible\n3. Verificar variables de entorno del configmap\n4. OOMKilled → aumentar límite de memoria\n5. Rollback al artefacto anterior si no se resuelve en < 15 min`},
+  {ua:'XCTT/XDTS',q:'El health check devuelve 503 tras arrancar',a:`1. Comprobar que BBDD y dependencias son accesibles desde el pod\n2. Revisar timeout de conexión en logs de inicio\n3. Verificar secrets y credenciales de entorno\n4. Comprobar que el puerto coincide con el del service`},
+  {ua:'XCTT/XDTS',q:'Errores de integración con la otra UUAA Java',a:`1. Comparar versión del contrato OpenAPI/Swagger entre ambas UAs\n2. Verificar que el endpoint existe en la versión desplegada\n3. Revisar headers de autenticación / tokens entre servicios\n4. Añadir logs de debug temporales para ver request/response real`},
+  {ua:'XREN',q:'El script afecta más documentos de los esperados',a:`1. Detener el script inmediatamente\n2. Restaurar desde backup previo\n3. Revisar el filtro del query — puede que el campo no esté indexado\n4. Ejecutar dry-run con .explain() antes de la siguiente ejecución`},
+  {ua:'XREN',q:'Errores de mapeo tras cambio de esquema',a:`1. Buscar el campo renombrado/eliminado en los @Field del modelo Java\n2. Si nullable → añadir valor por defecto antes de redesplegar\n3. Migración en dos fases: añadir campo nuevo → migrar → eliminar viejo`},
+  {ua:'KYFD',q:'El script SQL tarda más de lo esperado o bloquea',a:`1. SELECT * FROM v$locked_object en otra sesión\n2. Identificar sesión bloqueante → valorar kill session con DBA\n3. Para migraciones grandes → BATCH UPDATE con COMMIT cada N filas\n4. ROLLBACK si no cabe en la ventana`},
+  {ua:'KYFD',q:'Constraint violation tras ejecutar el script',a:`1. SELECT COUNT(*) de registros que violarían la constraint\n2. Limpiar datos inválidos primero\n3. Añadir constraint como DISABLE NOVALIDATE si hay urgencia\n4. Programar ventana para validación y activación completa`},
+  {ua:'General',q:'¿Cómo hacer rollback urgente?',a:`XCTT / XDTS (Java)\nRe-desplegar el artefacto de la versión anterior desde el registro. El pipeline debe tener el tag anterior disponible.\n\nXREN (Mongo)\nRestaurar colección desde backup previo. Documentar documentos creados entre backup y rollback.\n\nKYFD (Oracle)\nROLLBACK si la transacción está abierta. Si ya hay COMMIT → script de rollback del plan de cambio o restaurar desde RMAN.`}
+];
+
+function getType(ua){return ua==='XCTT'||ua==='XDTS'?'java':ua==='XREN'?'mongo':'oracle'}
+
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function showSection(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='historial') loadHistorial();
+  if(id==='errores') renderErrores();
+}
+
+function updateStepper(active){
+  for(let i=0;i<7;i++){
+    const d=document.getElementById('sd'+i);
+    if(!d) continue;
+    if(i<active){d.className='step-dot done';d.textContent='✓';}
+    else if(i===active){d.className='step-dot active';d.textContent=i+1;}
+    else{d.className='step-dot';d.textContent=i+1;}
+    const l=document.getElementById('sl'+i);
+    if(l) l.className='step-line'+(i<active?' done':'');
+  }
+}
+
+function updateBreadcrumb(){
+  const items=[S.ua,S.env,S.tipo].filter(Boolean);
+  document.getElementById('breadcrumb').innerHTML=items.map((x,i)=>
+    `<span class="bc-item">${x}</span>${i<items.length-1?'<span class="bc-sep"> › </span>':''}`
+  ).join('');
+}
+
+function goTo(n){
+  const oldId=currentPane==='cl'?'pane-cl':'pane-'+currentPane;
+  document.getElementById(oldId).classList.remove('active');
+  currentPane=n;
+  const newId=n==='cl'?'pane-cl':'pane-'+n;
+  document.getElementById(newId).classList.add('active');
+  updateStepper(n==='cl'?7:n);
+}
+
+function selectUA(ua){S.ua=ua;buildTipoStep();updateBreadcrumb();goTo(1);}
+function selectEnv(env){S.env=env;updateBreadcrumb();goTo(2);}
+
+function buildTipoStep(){
+  const cont=document.getElementById('chips-tipo');
+  cont.innerHTML='';
+  (TIPOS[S.ua]||[]).forEach(t=>{
+    const d=document.createElement('div');
+    d.className='chip'; d.textContent=t;
+    d.onclick=()=>selectTipo(t);
+    cont.appendChild(d);
+  });
+}
+
+function selectTipo(tipo){S.tipo=tipo;buildPiezasStep();updateBreadcrumb();goTo(3);}
+
+function buildPiezasStep(){
+  const t=getType(S.ua);
+  const cont=document.getElementById('checks-piezas');
+  cont.innerHTML=''; S.piezas=[];
+  (PIEZAS[t]||[]).forEach(p=>{
+    const d=document.createElement('div');
+    d.className='check-row';
+    d.innerHTML=`<div class="check-box"></div><span>${p}</span>`;
+    d.onclick=()=>{
+      d.classList.toggle('selected');
+      d.querySelector('.check-box').textContent=d.classList.contains('selected')?'✓':'';
+      if(d.classList.contains('selected')) S.piezas.push(p);
+      else S.piezas=S.piezas.filter(x=>x!==p);
+    };
+    cont.appendChild(d);
+  });
+}
+
+function confirmarPiezas(){buildImpactoStep();goTo(4);}
+
+function buildImpactoStep(){
+  const impacts=(IMPACTO[S.ua]||{})[S.tipo]||[];
+  const cont=document.getElementById('impacto-content');
+  if(!impacts.length){
+    cont.innerHTML=`<div class="impact-ok">Sin impacto cruzado detectado para <strong>${S.ua}</strong> + <strong>${S.tipo}</strong>. Puedes continuar sin pasos adicionales.</div>`;
+  } else {
+    cont.innerHTML=`<div class="impact-alert"><div class="impact-alert-title">Revisar antes de continuar</div>${impacts.map(i=>`<div class="impact-line"><span class="impact-tag">${i.ua}</span><span>${i.msg}</span></div>`).join('')}</div>`;
+  }
+}
+
+function goResumen(){
+  S.ticket =document.getElementById('f-ticket').value ||'—';
+  S.resp   =document.getElementById('f-resp').value   ||'—';
+  S.version=document.getElementById('f-version').value||'—';
+  S.desc   =document.getElementById('f-desc').value   ||'—';
+  buildResumen(); goTo(6);
+}
+
+function buildResumen(){
+  const piezasTxt=S.piezas.length?S.piezas.join(', '):'(ninguna seleccionada)';
+  const rows=[['UUAA',S.ua],['Entorno',S.env],['Tipo de cambio',S.tipo],['Piezas',piezasTxt],['Ticket',S.ticket],['Responsable',S.resp],['Versión',S.version],['Descripción',S.desc]];
+  document.getElementById('summary-content').innerHTML=rows.map(([k,v])=>`<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`).join('');
+}
+
+function generarChecklist(){
+  const t=getType(S.ua);
+  const impacts=(IMPACTO[S.ua]||{})[S.tipo]||[];
+  const sections=[];
+  let pre=CHECKS.previo_base.map(x=>({text:x,extra:false}));
+  if(S.env==='PRO') pre=[...pre,...CHECKS.previo_pro.map(x=>({text:x,extra:false}))];
+  sections.push({title:'Acciones previas',items:pre});
+  let sub=CHECKS.subida[t].map(x=>({text:x,extra:false}));
+  if(impacts.length) sub=[...sub,...impacts.map(i=>({text:`[${i.ua}] ${i.msg}`,extra:true}))];
+  sections.push({title:'Checklist de subida',items:sub});
+  if(S.piezas.length) sections.push({title:'Piezas a desplegar',items:S.piezas.map(p=>({text:p,extra:false}))});
+  sections.push({title:'Post-subida y validación',items:CHECKS.post[t].map(x=>({text:x,extra:false}))});
+
+  document.getElementById('cl-titulo').textContent=`${S.ua} — ${S.env}`;
+  document.getElementById('cl-subtitulo').textContent=S.tipo+(S.ticket!=='—'?' · '+S.ticket:'');
+
+  const body=document.getElementById('cl-body');
+  body.innerHTML='';
+  sections.forEach((sec,si)=>{
+    const wrap=document.createElement('div');
+    wrap.className='cl-section';
+    wrap.innerHTML=`<div class="cl-head">${sec.title}</div>`;
+    sec.items.forEach((item,ii)=>{
+      const el=document.createElement('div');
+      el.className='cl-item'+(item.extra?' extra-item':'');
+      el.id=`cli-${si}-${ii}`;
+      el.innerHTML=`<div class="cl-box" id="clb-${si}-${ii}"></div><span class="cl-text">${item.text}${item.extra?'<span class="cl-extra-tag">impacto cruzado</span>':''}</span>`;
+      el.onclick=()=>{
+        el.classList.toggle('done');
+        document.getElementById(`clb-${si}-${ii}`).textContent=el.classList.contains('done')?'✓':'';
+        updateProgress();
+      };
+      wrap.appendChild(el);
+    });
+    body.appendChild(wrap);
+  });
+
+  document.getElementById('pane-6').classList.remove('active');
+  currentPane='cl';
+  document.getElementById('pane-cl').classList.add('active');
+  updateStepper(7);
+  updateProgress();
+}
+
+function updateProgress(){
+  const all=document.querySelectorAll('#pane-cl .cl-item');
+  const done=document.querySelectorAll('#pane-cl .cl-item.done');
+  const pct=all.length?Math.round(done.length/all.length*100):0;
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-fill').className='prog-fill'+(pct===100?' complete':'');
+  document.getElementById('prog-txt').textContent=`${done.length} / ${all.length} pasos`;
+  document.getElementById('prog-pct').textContent=pct+'%';
+}
+
+async function guardarSubida(){
+  const all=document.querySelectorAll('#pane-cl .cl-item').length;
+  const done=document.querySelectorAll('#pane-cl .cl-item.done').length;
+  const pct=Math.round(done/all*100);
+  const payload={ua:S.ua,env:S.env,tipo:S.tipo,ticket:S.ticket!=='—'?S.ticket:null,responsable:S.resp!=='—'?S.resp:null,version:S.version!=='—'?S.version:null,descripcion:S.desc!=='—'?S.desc:null,pct,checks_total:all,checks_done:done};
+  try{
+    const res=await fetch(API,{method:'POST',headers:HDRS,body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error(await res.text());
+    toast('Subida guardada en el historial del equipo ✓');
+    resetWizard();
+  }catch(e){
+    console.error(e);
+    toast('Error al guardar — revisa las credenciales de Supabase','err');
+  }
+}
+
+function resetWizard(){
+  Object.assign(S,{ua:'',env:'',tipo:'',piezas:[],ticket:'',resp:'',version:'',desc:''});
+  const old=currentPane==='cl'?'pane-cl':'pane-'+currentPane;
+  document.getElementById(old).classList.remove('active');
+  currentPane=0;
+  document.getElementById('pane-0').classList.add('active');
+  updateStepper(0);
+  document.getElementById('breadcrumb').innerHTML='';
+  ['f-ticket','f-resp','f-version','f-desc'].forEach(id=>document.getElementById(id).value='');
+}
+
+async function loadHistorial(){
+  const list=document.getElementById('hist-list');
+  const stats=document.getElementById('hist-stats');
+  list.innerHTML=`<div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div><span>Cargando historial del equipo...</span></div>`;
+  stats.style.display='none';
+  try{
+    const res=await fetch(`${API}?order=fecha.desc&limit=100`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+    const data=await res.json();
+    if(!Array.isArray(data)||!data.length){list.innerHTML=`<div class="empty">Aún no hay subidas registradas.<br>Completa el wizard para crear la primera entrada.</div>`;return;}
+    const total=data.length;
+    const pro=data.filter(d=>d.env==='PRO').length;
+    const avgPct=Math.round(data.reduce((a,d)=>a+d.pct,0)/total);
+    stats.style.display='grid';
+    stats.innerHTML=`<div class="stat-card"><span class="stat-n">${total}</span><span class="stat-l">subidas totales</span></div><div class="stat-card"><span class="stat-n">${pro}</span><span class="stat-l">en producción</span></div><div class="stat-card"><span class="stat-n">${avgPct}%</span><span class="stat-l">completitud media</span></div>`;
+    const envB=e=>e==='PRO'?'badge-red':e==='PRE'?'badge-amber':'badge-blue';
+    const pctC=p=>p===100?'var(--green)':p>=80?'var(--amber)':'var(--red)';
+    const pctL=p=>p===100?'badge-green':p>=80?'badge-amber':'badge-red';
+    list.innerHTML=data.map(d=>{
+      const fecha=new Date(d.fecha).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      return `<div class="hist-item"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px"><span class="hist-ua">${d.ua}</span><span class="badge ${envB(d.env)}">${d.env}</span><span style="font-size:12px;color:var(--text2)">${d.tipo}</span></div>${d.descripcion?`<div class="hist-desc">${d.descripcion.substring(0,90)}${d.descripcion.length>90?'…':''}</div>`:''}<div class="hist-meta">${d.ticket||'—'} · ${d.responsable||'—'} · ${d.version||'—'} · ${fecha}</div></div><div class="hist-right"><span class="hist-pct" style="color:${pctC(d.pct)}">${d.pct}%</span><div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">${d.checks_done}/${d.checks_total}</div><span class="badge ${pctL(d.pct)}" style="margin-top:6px;display:inline-block">${d.pct===100?'completo':d.pct>=80?'parcial':'incompleto'}</span></div></div>`;
+    }).join('');
+  }catch(e){list.innerHTML=`<div class="empty">Error cargando historial.<br>Revisa las credenciales de Supabase en el código.</div>`;}
+}
+
+function renderErrores(){
+  const list=document.getElementById('errores-list');
+  if(list.children.length) return;
+  const uaB=ua=>ua.includes('XCTT')||ua.includes('XDTS')?'badge-amber':ua==='XREN'?'badge-blue':'badge-blue';
+  list.innerHTML=ERRORES.map((e,i)=>`<div class="error-item"><div class="error-q" onclick="toggleError(${i})"><div class="error-q-left"><span class="badge ${uaB(e.ua)}">${e.ua}</span><span>${e.q}</span></div><span class="error-toggle" id="etog-${i}">+</span></div><div class="error-a" id="ea-${i}">${e.a}</div></div>`).join('');
+}
+
+function toggleError(i){
+  const a=document.getElementById(`ea-${i}`);
+  const t=document.getElementById(`etog-${i}`);
+  a.classList.toggle('show');
+  t.textContent=a.classList.contains('show')?'−':'+';
+}
+</script>
+</body>
+</html>
